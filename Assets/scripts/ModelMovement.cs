@@ -18,7 +18,6 @@ public class ModelMovement : MonoBehaviour
         zoomPosition = startOffset.z;
         panPosition.x = startOffset.x;
         panPosition.y = startOffset.y;
-
     }
 
     private void Update()
@@ -28,11 +27,9 @@ public class ModelMovement : MonoBehaviour
             model.Rotate(new Vector3(0.0f, -Input.GetAxis("Mouse X"), 0) * Time.deltaTime * rotationSpeed);
         }
 
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftControl))
         {
             panPosition += new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) * panSpeed * Time.deltaTime;
-
-            //transform.position = new Vector3(panPosition.x , panPosition.y, transform.position.z);
         }
 
         float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
