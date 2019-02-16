@@ -1,46 +1,86 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TattooPositioning : MonoBehaviour
 {
     public Transform model;
     public GameObject decal;
+    private ch.sycoforge.Decal.EasyDecal lastDecalCandidate = null;
+    private ch.sycoforge.Decal.EasyDecal lastDecal = null;
+    private ch.sycoforge.Decal.EasyDecal preservedDecal = null;
+    private System.Collections.Generic.List<GameObject> disposables = new System.Collections.Generic.List<GameObject>();
+
+    System.Collections.IEnumerator dispose()
+    {
+        while (true)
+        {
+            for (int i = 0; i < disposables.Count; ++i)
+            {
+                Destroy(disposables[i]);
+            }
+            disposables.Clear();
+
+
+            yield return new WaitForSeconds(0.016f);
+        }
+    }
+
+    private void Awake()
+    {
+        StopAllCoroutines();
+        StartCoroutine(dispose());
+    }
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.LeftControl))
+        if (lastDecal)
         {
-            decal.SetActive(true);
+            if (lastDecal == preservedDecal)
+            {
+                preservedDecal = null;
+            }
+            else
+            {
+                disposables.Add(lastDecal.gameObject);
+                lastDecal.gameObject.SetActive(false);
+            }
         }
 
-        if(Input.GetKey(KeyCode.LeftControl))
+
+        //if(Input.GetKeyDown(KeyCode.LeftControl))
+        //{
+        //    decal.SetActive(true);
+        //}
+
+        if (Input.GetKey(KeyCode.LeftControl))
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-            Debug.DrawRay(ray.origin, ray.direction);
-            //Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-
-
             RaycastHit hitInfo;
 
-            if (Physics.Raycast(ray, out hitInfo, 10.0f)) {
-                //Quaternion rotation = Quaternion.FromToRotation(-decal.transform.up, );
+            if (Physics.Raycast(ray, out hitInfo, 10.0f))
+            {
+                lastDecalCandidate = ch.sycoforge.Decal.EasyDecal.ProjectAt(decal, hitInfo.collider.gameObject, hitInfo.point, hitInfo.normal);
+                lastDecalCandidate.gameObject.SetActive(true);
+                lastDecalCandidate.LateUnbake();
+                //lastDecalCandidate.gameObject.SetActive(true);
 
-                decal.transform.up = hitInfo.normal;
-
-                decal.transform.position = hitInfo.point;
-
-                if(Input.GetMouseButtonDown(0))
+                if (Input.GetMouseButtonDown(0))
                 {
-                    Instantiate(decal,decal.transform.parent, true);
+                    preservedDecal = lastDecalCandidate;
+                    preservedDecal.Baked = false;
+                    preservedDecal.LateBake();
                 }
             }
         }
 
-        if(Input.GetKeyUp(KeyCode.LeftControl))
-        {
-            decal.SetActive(false);
-        }
+        //if(Input.GetKeyUp(KeyCode.LeftControl))
+        //{
+        //    decal.SetActive(false);
+        //}
+    }
+
+    private void LateUpdate()
+    {
+        lastDecal = lastDecalCandidate;
     }
 }
