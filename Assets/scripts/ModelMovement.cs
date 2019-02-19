@@ -13,6 +13,9 @@ public class ModelMovement : MonoBehaviour
 #if UNITY_ANDROID || UNITY_IPHONE
     private Vector2 touchOrigin;
     private Vector2 positionOrigin;
+    private float touchDistanceLast;
+
+    public float zoomPositionOrigin { get; private set; }
 #endif
 
 
@@ -31,7 +34,7 @@ public class ModelMovement : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
 
-            panPosition += new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) * panSpeed * Time.deltaTime;
+            position += new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) * panSpeed * Time.deltaTime;
         }
 
         if (Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftControl))
@@ -44,37 +47,48 @@ public class ModelMovement : MonoBehaviour
         zoomPosition += wheelDelta * zoomSpeed * Time.deltaTime;
         zoomPosition = Mathf.Clamp(zoomPosition, startOffset.z + zoomBounds.x, startOffset.z + zoomBounds.y);
 
-        transform.position = new Vector3(panPosition.x, panPosition.y, zoomPosition);
+        transform.position = new Vector3(position.x, position.y, zoomPosition);
 #elif UNITY_ANDROID
-        if (Input.touchCount > 0)
+
+        if (Input.touchCount == 2)
         {
-            if (Input.touchCount == 2)
+            Vector2 touchMean = (Input.touches[0].position + Input.touches[1].position) / 2.0f;
+            float touchDistance = Vector2.Distance(Input.touches[0].position, Input.touches[1].position);
+            
+
+            if (Input.touches[0].phase == TouchPhase.Began || Input.touches[1].phase == TouchPhase.Began)
             {
-                Vector2 touchMean = (Input.touches[0].position + Input.touches[1].position) / 2.0f;
-
-                if (Input.touches[0].phase == TouchPhase.Began || Input.touches[1].phase == TouchPhase.Began)
-                {
-                    touchOrigin = touchMean;
-                    positionOrigin = position;
-                }
-
-                Vector2 touchOffset = (touchMean - touchOrigin) / 100.0f;
-
-                position = positionOrigin - touchOffset;
-
-                float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
-
-                zoomPosition += wheelDelta * zoomSpeed * Time.deltaTime;
-                zoomPosition = Mathf.Clamp(zoomPosition, startOffset.z + zoomBounds.x, startOffset.z + zoomBounds.y);
-
-                transform.position = new Vector3(position.x, position.y, zoomPosition);
+                touchOrigin = touchMean;
+                positionOrigin = position;
+                touchDistanceLast = touchDistance;
+                zoomPositionOrigin = zoomPosition;
             }
 
-            if (Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftControl))
-            {
-                model.Rotate(new Vector3(0.0f, -Input.GetAxis("Mouse X"), 0) * Time.deltaTime * rotationSpeed);
-            }
+            Vector2 touchOffset = (touchMean - touchOrigin) / 100.0f * panSpeed;
+
+            position = positionOrigin - touchOffset;
+
+            zoomPosition = zoomPosition + ((touchDistance - touchDistanceLast) / 100.0f);
+            zoomPosition = Mathf.Clamp(zoomPosition, startOffset.z + zoomBounds.x, startOffset.z + zoomBounds.y);
+
+            touchDistanceLast = touchDistance;
+
+
+
+            transform.position = new Vector3(position.x, position.y, zoomPosition);
         }
+        else if (Input.touchCount == 1)
+        {
+            Vector2 touchDelta;
+
+            if (Input.touches[0].phase == TouchPhase.Began)
+                touchDelta = Vector2.zero;
+            else
+                touchDelta = Input.touches[0].deltaPosition;
+
+            model.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * rotationSpeed);
+        }
+
 #endif
     }
 }
