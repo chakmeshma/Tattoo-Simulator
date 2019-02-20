@@ -4,6 +4,7 @@ public class TattooPositioning : MonoBehaviour
 {
     public Transform model;
     public GameObject decal;
+    public bool active;
     private ch.sycoforge.Decal.EasyDecal lastDecalCandidate = null;
     private ch.sycoforge.Decal.EasyDecal lastDecal = null;
     private ch.sycoforge.Decal.EasyDecal preservedDecal = null;
@@ -51,9 +52,15 @@ public class TattooPositioning : MonoBehaviour
         //    decal.SetActive(true);
         //}
 
-        if (Input.GetKey(KeyCode.LeftControl))
+#if UNITY_STANDALONE || UNITY_WEBGL
+        if (active)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+#elif UNITY_ANDROID
+        if (active && Input.touchCount == 2)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.touches[1].position);
+#endif
 
             RaycastHit hitInfo;
 
