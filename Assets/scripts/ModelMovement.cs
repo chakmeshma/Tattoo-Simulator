@@ -56,7 +56,7 @@ public class ModelMovement : MonoBehaviour
         zoomPosition = Mathf.Clamp(zoomPosition, startOffset.z + zoomBounds.x, startOffset.z + zoomBounds.y);
 
         transform.position = new Vector3(position.x, position.y, zoomPosition);
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID || UNITY_IPHONE
 
             if (Input.touchCount == 2 &&
                 Input.GetTouch(0).phase != TouchPhase.Ended &&

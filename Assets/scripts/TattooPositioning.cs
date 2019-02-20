@@ -56,7 +56,7 @@ public class TattooPositioning : MonoBehaviour
         if (active)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-#elif UNITY_ANDROID
+#elif UNITY_ANDROID || UNITY_IPHONE
         if (active && Input.touchCount == 2)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.touches[1].position);
@@ -71,8 +71,14 @@ public class TattooPositioning : MonoBehaviour
                 lastDecalCandidate.LateUnbake();
                 //lastDecalCandidate.gameObject.SetActive(true);
 
+#if UNITY_STANDALONE || UNITY_WEBGL
                 if (Input.GetMouseButtonDown(0))
                 {
+#elif UNITY_ANDROID || UNITY_IPHONE
+                if (Input.GetTouch(0).phase == TouchPhase.Ended ||
+                    Input.GetTouch(1).phase == TouchPhase.Ended)
+                {
+#endif
                     preservedDecal = lastDecalCandidate;
                     preservedDecal.Baked = false;
                     preservedDecal.LateBake();
