@@ -3,7 +3,7 @@
 public class ModelMovement : MonoBehaviour
 {
     public bool active = true;
-    public Transform model;
+    public GameObject model;
     public Vector2 zoomBounds;
     private float zoomPosition;
     private Vector2 position;
@@ -49,7 +49,7 @@ public class ModelMovement : MonoBehaviour
 
             if (Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftControl))
             {
-                model.Rotate(new Vector3(0.0f, -Input.GetAxis("Mouse X"), 0) * Time.deltaTime * SW_rotationSpeed);
+                model.transform.Rotate(new Vector3(0.0f, -Input.GetAxis("Mouse X"), 0) * Time.deltaTime * SW_rotationSpeed);
             }
 
             float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
@@ -116,9 +116,9 @@ public class ModelMovement : MonoBehaviour
                 }
 
 #if UNITY_STANDALONE || UNITY_WEBGL
-                model.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * SW_rotationSpeed);
+                model.transform.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * SW_rotationSpeed);
 #elif UNITY_ANDROID || UNITY_IPHONE
-                model.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * H_rotationSpeed);
+                model.transform.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * H_rotationSpeed);
 #endif
             }
 
