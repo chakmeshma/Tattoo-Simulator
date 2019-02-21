@@ -4,9 +4,6 @@ public class ModelMovement : MonoBehaviour
 {
     public bool active = true;
     public Transform model;
-    public float panSpeed = 1.0f;
-    public float rotationSpeed = 1.0f;
-    public float zoomSpeed = 1.0f;
     public Vector2 zoomBounds;
     private float zoomPosition;
     private Vector2 position;
@@ -15,10 +12,15 @@ public class ModelMovement : MonoBehaviour
     private Vector2 touchOrigin;
     private Vector2 positionOrigin;
     private float touchDistanceLast;
-
-    public float zoomPositionOrigin { get; private set; }
 #endif
-
+    [Header("Standalone & PC")]
+    public float SW_panSpeed;
+    public float SW_rotationSpeed;
+    public float SW_zoomSpeed;
+    [Header("Handheld")]
+    public float H_panSpeed;
+    public float H_rotationSpeed;
+    public float H_zoomSpeed;
 
     private void Awake()
     {
@@ -39,23 +41,29 @@ public class ModelMovement : MonoBehaviour
         if (active)
         {
 #if UNITY_STANDALONE || UNITY_WEBGL
-        if (Input.GetMouseButton(1))
-        {
+            if (Input.GetMouseButton(1))
+            {
 
-            position += new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) * panSpeed * Time.deltaTime;
-        }
+                position += new Vector2(-Input.GetAxis("Mouse X"), -Input.GetAxis("Mouse Y")) * SW_panSpeed * Time.deltaTime;
+            }
 
-        if (Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftControl))
-        { 
-              model.Rotate(new Vector3(0.0f, -Input.GetAxis("Mouse X"), 0) * Time.deltaTime * rotationSpeed);
-        }
+            if (Input.GetMouseButton(0) && !Input.GetKey(KeyCode.LeftControl))
+            {
+                model.Rotate(new Vector3(0.0f, -Input.GetAxis("Mouse X"), 0) * Time.deltaTime * SW_rotationSpeed);
+            }
 
-        float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
+            float wheelDelta = Input.GetAxis("Mouse ScrollWheel");
 
-        zoomPosition += wheelDelta * zoomSpeed * Time.deltaTime;
-        zoomPosition = Mathf.Clamp(zoomPosition, startOffset.z + zoomBounds.x, startOffset.z + zoomBounds.y);
 
-        transform.position = new Vector3(position.x, position.y, zoomPosition);
+#if UNITY_STANDALONE || UNITY_WEBGL
+            zoomPosition += wheelDelta * SW_zoomSpeed * Time.deltaTime;
+#elif UNITY_ANDROID || UNITY_IPHONE
+            zoomPosition += wheelDelta * zoomSpeed * Time.deltaTime;
+#endif
+
+            zoomPosition = Mathf.Clamp(zoomPosition, startOffset.z + zoomBounds.x, startOffset.z + zoomBounds.y);
+
+            transform.position = new Vector3(position.x, position.y, zoomPosition);
 #elif UNITY_ANDROID || UNITY_IPHONE
 
             if (Input.touchCount == 2 &&
@@ -73,10 +81,13 @@ public class ModelMovement : MonoBehaviour
                     touchOrigin = touchMean;
                     positionOrigin = position;
                     touchDistanceLast = touchDistance;
-                    zoomPositionOrigin = zoomPosition;
                 }
 
-                Vector2 touchOffset = (touchMean - touchOrigin) / 100.0f * panSpeed;
+#if UNITY_STANDALONE || UNITY_WEBGL
+                Vector2 touchOffset = (touchMean - touchOrigin) / 100.0f * SW_panSpeed;
+#elif UNITY_ANDROID || UNITY_IPHONE
+                Vector2 touchOffset = (touchMean - touchOrigin) / 100.0f * H_panSpeed;
+#endif
 
                 position = positionOrigin - touchOffset;
 
@@ -104,7 +115,11 @@ public class ModelMovement : MonoBehaviour
                     touchDelta = Input.touches[0].deltaPosition;
                 }
 
-                model.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * rotationSpeed);
+#if UNITY_STANDALONE || UNITY_WEBGL
+                model.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * SW_rotationSpeed);
+#elif UNITY_ANDROID || UNITY_IPHONE
+                model.Rotate(new Vector3(0.0f, -touchDelta.x, 0) * H_rotationSpeed);
+#endif
             }
 
 #endif

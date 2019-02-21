@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Interaction : MonoBehaviour
 {
-    public TattooPositioning tattooPositioning;
+    public GameObject decalSource;
     public ModelMovement modelMovement;
 
     public void OnTattooButtonPressed()
@@ -19,7 +19,7 @@ public class Interaction : MonoBehaviour
 
     protected void tattooActivate(bool active)
     {
-        tattooPositioning.active = active;
         modelMovement.active = !active;
+        decalSource.SetActive(active);
     }
 }
