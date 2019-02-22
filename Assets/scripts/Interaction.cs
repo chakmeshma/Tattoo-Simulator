@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 public class Interaction : MonoBehaviour
 {
@@ -7,16 +8,20 @@ public class Interaction : MonoBehaviour
     public GameObject qualitySettingOptionsContainer;
     public GameObject highPolyModel;
     public GameObject lowPolyModel;
-
+    public Toggle antiAliasingToggle;
 
     private void Update()
     {
 #if UNITY_STANDALONE || UNITY_WEBGL
         if (Input.GetKeyDown(KeyCode.LeftControl))
+        {
             tattooActivate(true);
+        }
 
         if (Input.GetKeyUp(KeyCode.LeftControl))
+        {
             tattooActivate(false);
+        }
 #endif
     }
 
@@ -79,6 +84,11 @@ public class Interaction : MonoBehaviour
         }
 
         onQualitySettingButtonClicked();
+    }
+
+    public void onAntiAliasingChanged()
+    {
+        QualitySettings.antiAliasing = (antiAliasingToggle.isOn) ? (4) : (0);
     }
     #endregion
 }
