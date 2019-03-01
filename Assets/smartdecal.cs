@@ -6,6 +6,82 @@ public class smartdecal : MonoBehaviour
     public Object theObject;
     private float radius;
 
+    private void falldown(int x, int z, ref Vector3[] newVertices, Vector3 lastPoint, bool horizontal, bool backward)
+    {
+        RaycastHit hitInfo = new RaycastHit();
+        float degreeStep = 10.0f;
+        int index;
+
+        for (int i = 0; i < 5; ++i)
+        {
+            for (float degree = 0.0f; degree < 360.0f; degree += degreeStep)
+            {
+                Vector3 circlePointVector = (radius * Mathf.Cos(degree * Mathf.Deg2Rad) * ((horizontal) ? (transform.right) : (transform.forward)))
+                    + (radius * Mathf.Sin(degree * Mathf.Deg2Rad) * transform.up);
+
+                if (backward)
+                {
+                    circlePointVector *= -1;
+                }
+
+                Vector3 circlePoint = (horizontal) ? (lastPoint + circlePointVector) : (lastPoint - circlePointVector);
+
+                Vector3 rayVector;
+
+                if (backward)
+                {
+                    rayVector = -Vector3.Cross(circlePointVector, (horizontal) ? (transform.forward) : (transform.right));
+                }
+                else
+                {
+                    rayVector = Vector3.Cross(circlePointVector, (horizontal) ? (transform.forward) : (transform.right));
+                }
+
+                float rayLength = (degreeStep / 360.0f) * 2.0f * Mathf.PI * radius;
+
+                if (Physics.Raycast(circlePoint, rayVector, out hitInfo, rayLength))
+                {
+                    if (backward)
+                    {
+                        index = getVertexIndexAt((horizontal) ? (x - 1) : (x), (horizontal) ? (z) : (z - 1));
+                    }
+                    else
+                    {
+                        index = getVertexIndexAt((horizontal) ? (x + 1) : (x), (horizontal) ? (z) : (z + 1));
+                    }
+
+                    newVertices[index] = transform.InverseTransformPoint(hitInfo.point);
+
+                    break;
+                }
+            }
+
+            lastPoint = hitInfo.point;
+            if (horizontal)
+            {
+                if (backward)
+                {
+                    x--;
+                }
+                else
+                {
+                    x++;
+                }
+            }
+            else
+            {
+                if (backward)
+                {
+                    z--;
+                }
+                else
+                {
+                    z++;
+                }
+            }
+        }
+    }
+
     private void vorgang(int x, int z)
     {
         RaycastHit hitInfo;
@@ -22,43 +98,42 @@ public class smartdecal : MonoBehaviour
 
             newVertices[index] = transform.InverseTransformPoint(hitInfo.point);
 
-
             Vector3 lastPoint = hitInfo.point;
 
-            float degreeStep = 10.0f;
+            falldown(x, z, ref newVertices, lastPoint, false, false);
+            falldown(x, z, ref newVertices, lastPoint, true, false);
+            falldown(x, z, ref newVertices, lastPoint, false, true);
+            falldown(x, z, ref newVertices, lastPoint, true, true);
+            //falldown(x, z, ref newVertices, lastPoint, false, false);
 
-            for (int i = 0; i < 5; ++i)
+            for (int i = 1; i < 6; ++i)
             {
-                for (float degree = 0.0f; degree < 360.0f; degree += degreeStep)
-                {
-                    Vector3 circlePointVector = (radius * Mathf.Cos(degree * Mathf.Deg2Rad) * transform.right) + (radius * Mathf.Sin(degree * Mathf.Deg2Rad) * transform.up);
-                    Vector3 circlePoint = lastPoint + circlePointVector;
-
-                    Vector3 rayVector = Vector3.Cross(circlePointVector, transform.forward);
-
-                    float rayLength = (degreeStep / 360.0f) * 2.0f * Mathf.PI * radius;
-
-                    if (Physics.Raycast(circlePoint, rayVector, out hitInfo, rayLength))
-                    {
-                        index = getVertexIndexAt(x + 1, z);
-
-                        newVertices[index] = transform.InverseTransformPoint(hitInfo.point);
-
-                        break;
-                    }
-                }
-
-                lastPoint = hitInfo.point;
-                x++;
+                lastPoint = transform.TransformPoint(newVertices[getVertexIndexAt(0, i)]);
+                falldown(x, z + i, ref newVertices, lastPoint, true, false);
+                falldown(x, z + i, ref newVertices, lastPoint, true, true);
+                lastPoint = transform.TransformPoint(newVertices[getVertexIndexAt(0, -i)]);
+                falldown(x, z - i, ref newVertices, lastPoint, true, false);
+                falldown(x, z - i, ref newVertices, lastPoint, true, true);
             }
 
+            for (int i = 1; i < 6; ++i)
+            {
+                lastPoint = transform.TransformPoint(newVertices[getVertexIndexAt(i, 0)]);
+                falldown(x + i, z, ref newVertices, lastPoint, false, false);
+                falldown(x + i, z, ref newVertices, lastPoint, false, true);
+                lastPoint = transform.TransformPoint(newVertices[getVertexIndexAt(-i, 0)]);
+                falldown(x - i, z, ref newVertices, lastPoint, false, false);
+                falldown(x - i, z, ref newVertices, lastPoint, false, true);
+            }
+
+            //for (int i = 1; i < 6; ++i)
+            //{
+            //    lastPoint = transform.TransformPoint(newVertices[getVertexIndexAt(i, 0)]);
+            //    falldown(x + i, z, ref newVertices, lastPoint, false, false);
+            //    falldown(x - i, z, ref newVertices, lastPoint, false, false);
+            //}
+
             GetComponent<MeshFilter>().mesh.vertices = newVertices;
-
-
-
-
-
-
         }
     }
 
